@@ -1,9 +1,7 @@
 import sys
-import threading
-import time
 from typing import Callable, List
 
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtWidgets import (
     QApplication,
     QCheckBox,
