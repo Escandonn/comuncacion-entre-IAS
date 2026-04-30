@@ -1,10 +1,14 @@
-﻿from typing import Optional
+﻿from pathlib import Path
+from string import Template
+from typing import Optional
 
 from services.ai_client import GroqClient
 from .memoria import Memoria
 
 
 class Agente:
+    PROMPT_TEMPLATE_PATH = Path(__file__).resolve().parents[1] / "pront.md"
+
     def __init__(
         self,
         nombre: str,
@@ -15,6 +19,7 @@ class Agente:
         responde_usuario: bool,
         client: GroqClient,
         memoria: Optional[Memoria] = None,
+        pais: str = "Colombia",
     ):
         self.nombre = nombre
         self.personalidad = personalidad
@@ -24,33 +29,43 @@ class Agente:
         self.responde_usuario = responde_usuario
         self.client = client
         self.memoria = memoria
+        self.pais = pais
 
-    def _build_system_prompt(self) -> str:
-        instrucciones = [
-            f"Eres {self.nombre}, un agente de IA con personalidad {self.personalidad}.",
-            f"Tu región de referencia es {self.region} y el tema central de la conversación es {self.tema}.",
-            "Mantén el tono y estilo de tu personalidad, protege la coherencia y evita contradicciones.",
-            "Si el usuario envía una pregunta, responde de forma concisa, contextualizada y respetuosa.",
-        ]
+    @classmethod
+    def _leer_prompt_template(cls) -> str:
+        if not cls.PROMPT_TEMPLATE_PATH.exists():
+            raise FileNotFoundError(f"No se encontró el archivo de prompt: {cls.PROMPT_TEMPLATE_PATH}")
+        return cls.PROMPT_TEMPLATE_PATH.read_text(encoding="utf-8")
 
-        if not self.participa:
-            instrucciones.append("No participes activamente en la conversación si no estás marcado como participante.")
+    def _build_system_prompt(self, mensaje: str) -> str:
+        prompt_raw = self._leer_prompt_template()
+        plantilla = Template(prompt_raw)
 
-        if not self.responde_usuario:
-            instrucciones.append("No asumas que debes responder al usuario a menos que se te solicite explícitamente.")
+        tipo_interaccion = "responde" if self.responde_usuario else "pregunta"
+        responde_a = "Usuario" if self.responde_usuario else "otros participantes"
+        tiempo_respuesta = "medio"
 
-        return " ".join(instrucciones)
+        return plantilla.safe_substitute(
+            tema=self.tema or "general",
+            personalidad=self.personalidad or "neutral",
+            pais=self.pais,
+            region=self.region,
+            tipo_interaccion=tipo_interaccion,
+            responde_a=responde_a,
+            tiempo_respuesta=tiempo_respuesta,
+            mensaje=mensaje or f"Continúa la conversación sobre {self.tema}.",
+        )
 
     def _build_user_message(self, mensaje: str, contexto: Optional[str] = None) -> str:
         partes = []
         if contexto:
             partes.append(f"Contexto de conversación:\n{contexto}")
-        partes.append(f"Instrucción para el agente: {mensaje}")
-        partes.append("Responde como este agente con la personalidad definida y usando el contexto disponible.")
+        partes.append(f"Mensaje actual: {mensaje}")
+        partes.append("Responde usando tu personalidad y el contexto anterior.")
         return "\n\n".join(partes)
 
     def responder(self, mensaje: str, contexto: Optional[str] = None) -> str:
-        system_prompt = self._build_system_prompt()
+        system_prompt = self._build_system_prompt(mensaje)
         user_message = self._build_user_message(mensaje, contexto)
 
         respuesta = self.client.chat(system_prompt, user_message)
