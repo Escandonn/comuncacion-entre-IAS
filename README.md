@@ -16,7 +16,7 @@ La aplicación utiliza la API de Groq para generar texto y una interfaz PyQt par
 
 ## 📁 Estructura del proyecto
 
-`
+```
 Comunicacion-entre-IAS/
  ├── .env
  ├── main.py
@@ -31,7 +31,7 @@ Comunicacion-entre-IAS/
  └── ui/
       ├── app.py
       └── __init__.py
-`
+```
 
 ---
 
@@ -49,23 +49,23 @@ Comunicacion-entre-IAS/
 
 1. Clona el repositorio:
 
-`ash
+```bash
 git clone <tu-repo>
 cd "c:\python\Comunicacion-entre-IAS"
-`
+```
 
 2. Instala dependencias:
 
-`ash
+```bash
 pip install groq python-dotenv PyQt5
-`
+```
 
 3. Crea el archivo .env en la raíz:
 
-`env
+```env
 GROQ_API_KEY=tu_api_key
 MODEL_NAME=llama-3.3-70b-versatile
-`
+```
 
 > No subas .env a repositorios públicos.
 
@@ -75,9 +75,9 @@ MODEL_NAME=llama-3.3-70b-versatile
 
 Ejecuta la aplicación con:
 
-`ash
+```bash
 python main.py
-`
+```
 
 La interfaz abrirá una tabla editable con los agentes, el tema, una entrada de usuario y botones para iniciar o detener la conversación.
 
